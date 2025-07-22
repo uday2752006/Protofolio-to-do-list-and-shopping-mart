@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Listing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background: #f5f5f5;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .filter-section, .sort-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        select, input {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .product-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .product-info {
+            padding: 1.5rem;
+        }
+        
+        .product-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .product-category {
+            display: inline-block;
+            background: #f1f1f1;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-price {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .product-rating {
+            color: #f39c12;
+            margin-bottom: 1rem;
+        }
+        
+        .add-to-cart {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        .add-to-cart:hover {
+            background: #2980b9;
+        }
+        
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .filter-section, .sort-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Our Products</h1>
+        
+        <div class="controls">
+            <div class="filter-section">
+                <select id="categoryFilter">
+                    <option value="all">All Categories</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="home">Home & Kitchen</option>
+                    <option value="books">Books</option>
+                </select>
+                
+                <div>
+                    <label for="priceRange">Price Range: </label>
+                    <input type="range" id="priceRange" min="0" max="1000" step="50" value="1000">
+                    <span id="priceValue">Up to ₹83,000</span>
+                </div>
+            </div>
+            
+            <div class="sort-section">
+                <select id="sortBy">
+                    <option value="default">Sort By</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="rating">Rating</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="products-grid" id="productsGrid"></div>
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, title: "Wireless Headphones", category: "electronics", price: 99, rating: 4.5, image: "headphones.webp" },
+            { id: 2, title: "Smart Watch", category: "electronics", price: 199, rating: 4.2, image: "smartwatch.webp" },
+            { id: 3, title: "Cotton T-Shirt", category: "clothing", price: 19, rating: 4.0, image: "cotton-t-shirts.jpg" },
+            { id: 4, title: "Jeans", category: "clothing", price: 49, rating: 4.3, image: "jeans.jpg" },
+            { id: 5, title: "Coffee Maker", category: "home", price: 79, rating: 4.7, image: "coffee maker.jpg" },
+            { id: 6, title: "JavaScript Book", category: "books", price: 29, rating: 4.8, image: "js.jpg" },
+            { id: 7, title: "Python Book", category: "books", price: 34, rating: 4.6, image: "python.jpeg" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const categoryFilter = document.getElementById('categoryFilter');
+            const priceRange = document.getElementById('priceRange');
+            const priceValue = document.getElementById('priceValue');
+            const sortBy = document.getElementById('sortBy');
+            const productsGrid = document.getElementById('productsGrid');
+
+            renderProducts(products);
+
+            categoryFilter.addEventListener('change', filterAndSortProducts);
+            priceRange.addEventListener('input', function () {
+                priceValue.textContent = `Up to ₹${(this.value * 83).toLocaleString('en-IN')}`;
+                filterAndSortProducts();
+            });
+            sortBy.addEventListener('change', filterAndSortProducts);
+
+            function filterAndSortProducts() {
+                let filteredProducts = [...products];
+
+                if (categoryFilter.value !== 'all') {
+                    filteredProducts = filteredProducts.filter(product => product.category === categoryFilter.value);
+                }
+
+                const maxPriceUSD = parseInt(priceRange.value);
+                filteredProducts = filteredProducts.filter(product => product.price <= maxPriceUSD);
+
+                switch (sortBy.value) {
+                    case 'price-low':
+                        filteredProducts.sort((a, b) => a.price - b.price);
+                        break;
+                    case 'price-high':
+                        filteredProducts.sort((a, b) => b.price - a.price);
+                        break;
+                    case 'rating':
+                        filteredProducts.sort((a, b) => b.rating - a.rating);
+                        break;
+                    default:
+                        filteredProducts.sort((a, b) => a.id - b.id);
+                }
+
+                renderProducts(filteredProducts);
+            }
+
+            function renderProducts(productsToRender) {
+                productsGrid.innerHTML = '';
+
+                if (productsToRender.length === 0) {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'no-results';
+                    noResults.textContent = 'No products match your criteria.';
+                    productsGrid.appendChild(noResults);
+                    return;
+                }
+
+                productsToRender.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card';
+
+                    const formattedPrice = new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR'
+                    }).format(product.price * 83);
+
+                    productCard.innerHTML = `
+                        <img src="${product.image}" alt="${product.title}" class="product-img">
+                        <div class="product-info">
+                            <h3 class="product-title">${product.title}</h3>
+                            <span class="product-category">${product.category}</span>
+                            <div class="product-price">${formattedPrice}</div>
+                            <div class="product-rating">
+                                ${'★'.repeat(Math.floor(product.rating))}${'☆'.repeat(5 - Math.floor(product.rating))} ${product.rating}
+                            </div>
+                            <button class="add-to-cart">Add to Cart</button>
+                        </div>
+                    `;
+
+                    productsGrid.appendChild(productCard);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
